@@ -12,11 +12,11 @@ namespace CCAWebAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class CCAContoller : ControllerBase
+    public class CCAContollerSS : ControllerBase
     {
         private readonly IConfiguration _configuration;
 
-        public CCAContoller(IConfiguration configuration)
+        public CCAContollerSS(IConfiguration configuration)
         {
             _configuration = configuration;
         }
@@ -29,7 +29,7 @@ FROM dbo.Sample
 INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
 
             DataTable table = new();
-            string sqlDataSource = _configuration.GetConnectionString("CCA");
+            string sqlDataSource = _configuration.GetConnectionString("CCASS");
             SqlDataReader myReader;
             using (SqlConnection myCon = new(sqlDataSource))
             {
