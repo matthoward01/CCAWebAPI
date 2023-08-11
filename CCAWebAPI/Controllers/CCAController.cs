@@ -62,7 +62,7 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
             if (doRoomsceneStuff)
             {
 
-                string sql = $"SELECT Merchandised_Product_Color_Id FROM dbo.Details WHERE Manufacturer_Product_Color_ID = '{realId[2]}'";
+                string sql = $"SELECT Merchandised_Product_Color_Id FROM dbo.Details WHERE Manufacturer_Product_Color_ID = '{realId[1]}'";
                 using (SqlConnection myCon = new(sqlDataSource))
                 {
                     myCon.Open();
@@ -102,7 +102,7 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
                 }
             }
 
-            string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Sample.Sample_Note, dbo.Labels.Division_Label_Name from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID where (dbo.Details.Sample_ID='{realId[0]}' and (dbo.Details.Art_Type_BL='{realId[1]}' OR dbo.Details.Art_Type_FL='{realId[1]}'))";
+            string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Sample.Sample_Note, dbo.Labels.Division_Label_Name from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID where (dbo.Details.Sample_ID='{realId[0]}'";
             
             DataTable table = new();
             
