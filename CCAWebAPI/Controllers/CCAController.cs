@@ -12,9 +12,16 @@ using System.IO;
 namespace CCAWebAPI.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("[controller]")]   
+
     public class CCAContoller : ControllerBase
     {
+        public class Changes
+        {
+            public string Sample_ID { get; set; }
+            public string Change { get; set; }
+        }
+
         private readonly IConfiguration _configuration;
 
         public CCAContoller(IConfiguration configuration)
@@ -23,7 +30,7 @@ namespace CCAWebAPI.Controllers
         }
 
         [HttpGet]
-        [Route("Table")]
+        [Route("TableHS")]
         public JsonResult GetTable()
         {
             string query = @"SELECT DISTINCT dbo.Details.Supplier_Name, dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Manufacturer_Product_Color_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, Sample_Name, Shared_Card, dbo.Details.Change, dbo.Details.Change_FL, dbo.Details.Output, dbo.Details.Output_FL 
@@ -47,8 +54,29 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
             return new JsonResult(table);
         }
 
-        [HttpGet("Job/{id}")]
-        //[Route("Job")]
+        [HttpPut("JobHS/Change")]
+        public JsonResult PutChange(Changes cng)
+        {
+            string query = $"UPDATE dbo.Details set Change = '{cng.Change}' where Sample_ID = '{cng.Sample_ID}'";
+            DataTable table = new DataTable();
+            string sqlDataSource = _configuration.GetConnectionString("CCA");
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader); ;
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+
+            return new JsonResult("Updated Successfully");
+        }
+
+        [HttpGet("JobHS/{id}")]
         public JsonResult GetJob(string id)
         {
             string roomscenePath = @"\\MAG1PVSF4\Resources\Approved Roomscenes\CCA Automation 2.0";
@@ -102,7 +130,7 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
                 }
             }
 
-            string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Sample.Sample_Note, dbo.Labels.Division_Label_Name from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID where (dbo.Details.Sample_ID='{realId[0]}'";
+            string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Sample.Sample_Note, dbo.Labels.Division_Label_Name from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID where dbo.Details.Sample_ID='{realId[0]}'";
             
             DataTable table = new();
             
@@ -121,6 +149,7 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
 
             return new JsonResult(table);
         }
+        
         [HttpGet]
         [Route("Full")]
         public JsonResult GetFull()
