@@ -37,7 +37,7 @@ namespace CCAWebAPI.Controllers
         [HttpGet("TableSS")]
         public JsonResult GetTable()
         {
-            string query = @"SELECT DISTINCT dbo.Details.Supplier_Name, dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL, dbo.Details.Output, dbo.Details.Output_FL 
+            string query = @"SELECT DISTINCT dbo.Details.Supplier_Name, dbo.Details.Supplier_Product_Name, dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL, dbo.Details.Output, dbo.Details.Output_FL 
 FROM dbo.Sample 
 INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
 
@@ -123,7 +123,7 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
             if (doRoomsceneStuff)
             {
 
-                string sql = $"SELECT Merchandised_Product_Color_Id FROM dbo.Details WHERE (Sample_ID = '{realId[0]}' and Manufacturer_Feeler='yes')";
+                string sql = $"SELECT Merchandised_Product_Color_Id FROM dbo.Details WHERE (Supplier_Product_Name = '{realId[1]}' and Manufacturer_Feeler='yes')";
                 using (SqlConnection myCon = new(sqlDataSource))
                 {
                     myCon.Open();
