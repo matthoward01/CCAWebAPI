@@ -21,6 +21,13 @@ namespace CCAWebAPI.Controllers
             public string Sample_ID { get; set; }
             public string Change { get; set; }
         }
+        public class Status
+        {
+            public string Status_Type { get; set; }
+            public string Sample_ID { get; set; }
+            public string New_Status { get; set; }
+        }
+
 
         private readonly IConfiguration _configuration;
 
@@ -29,11 +36,10 @@ namespace CCAWebAPI.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet]
-        [Route("TableHS")]
+        [HttpGet("TableHS")]
         public JsonResult GetTable()
         {
-            string query = @"SELECT DISTINCT dbo.Details.Supplier_Name, dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Manufacturer_Product_Color_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, Sample_Name, Shared_Card, dbo.Details.Change, dbo.Details.Change_FL, dbo.Details.Output, dbo.Details.Output_FL 
+            string query = @"SELECT DISTINCT dbo.Details.Supplier_Name, dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Manufacturer_Product_Color_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL, dbo.Details.Output, dbo.Details.Output_FL 
 FROM dbo.Sample 
 INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
 
@@ -58,6 +64,35 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
         public JsonResult PutChange(Changes cng)
         {
             string query = $"UPDATE dbo.Details set Change = '{cng.Change}' where Sample_ID = '{cng.Sample_ID}'";
+            DataTable table = new DataTable();
+            string sqlDataSource = _configuration.GetConnectionString("CCA");
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader); ;
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+
+            return new JsonResult("Updated Successfully");
+        }
+        [HttpPut("JobHS/Status")]
+        public JsonResult PutStatus(Status stat)
+        {
+            string query = "";
+            if (stat.Status_Type.Equals("fl"))
+            {
+                query = $"UPDATE dbo.Details set Status_FL = '{stat.New_Status}' where Sample_ID = '{stat.Sample_ID}'";
+            }
+            if (stat.Status_Type.Equals("bl"))
+            {
+                query = $"UPDATE dbo.Details set Status = '{stat.New_Status}' where Sample_ID = '{stat.Sample_ID}'";
+            }
             DataTable table = new DataTable();
             string sqlDataSource = _configuration.GetConnectionString("CCA");
             SqlDataReader myReader;
@@ -148,29 +183,6 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
             }
 
             return new JsonResult(table);
-        }
-        
-        [HttpGet]
-        [Route("Full")]
-        public JsonResult GetFull()
-        {
-            string query = @"SELECT * from dbo.Details";
-
-            DataTable table = new();
-            string sqlDataSource = _configuration.GetConnectionString("CCA");
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new(sqlDataSource))
-            {
-                myCon.Open();
-                using (SqlCommand myCommand = new(query, myCon))
-                {
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myCon.Close();
-                }
-            }
-            return new JsonResult(table);
-        }
+        }        
     }
 }
