@@ -39,7 +39,7 @@ namespace CCAWebAPI.Controllers
         [HttpGet("TableHS")]
         public JsonResult GetTable()
         {
-            string query = @"SELECT DISTINCT dbo.Details.Supplier_Name, dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Manufacturer_Product_Color_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL, dbo.Details.Output, dbo.Details.Output_FL 
+            string query = @"SELECT DISTINCT dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Details.Program, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL, dbo.Details.Output, dbo.Details.Output_FL 
 FROM dbo.Sample 
 INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
 
@@ -116,6 +116,7 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
         {
             string roomscenePath = @"\\MAG1PVSF4\Resources\Approved Roomscenes\CCA Automation 2.0";
             string[] realId = id.Split(',');
+            List<string> styleList = new();
             string sqlDataSource = _configuration.GetConnectionString("CCA");
             List<string> mIds = new();
             bool doRoomsceneStuff = true;
@@ -125,7 +126,36 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
             if (doRoomsceneStuff)
             {
 
-                string sql = $"SELECT Merchandised_Product_Color_Id FROM dbo.Details WHERE Manufacturer_Product_Color_ID = '{realId[1]}'";
+                string sql1 = $"SELECT DISTINCT Supplier_Product_Name FROM dbo.Details WHERE (Sample_ID='{realId[0]}' AND Program='{realId[1]}')";
+                using (SqlConnection myCon = new(sqlDataSource))
+                {
+                    myCon.Open();
+                    command = new SqlCommand(sql1, myCon);
+                    dataReader = command.ExecuteReader();
+                    while (dataReader.Read())
+                    {
+                        styleList.Add(dataReader.GetString(dataReader.GetOrdinal("Supplier_Product_Name")));
+                    }
+
+                    dataReader.Close();
+                    command.Dispose();
+                    myCon.Close();
+                }
+                int count = 0;
+                string sql = $"SELECT DISTINCT Merchandised_Product_Color_Id FROM dbo.Details WHERE (";
+                foreach (string style in styleList)
+                {
+                    if (count.Equals(0))
+                    {
+                        sql += $"(Supplier_Product_Name = '{style}'";
+                        count++;
+                    }
+                    else
+                    {
+                        sql += $" OR Supplier_Product_Name = '{style}'";
+                    }
+                }
+                sql += $") AND Program='{realId[1]}')";
                 using (SqlConnection myCon = new(sqlDataSource))
                 {
                     myCon.Open();
@@ -153,7 +183,7 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
                 {
                     roomsceneName = Path.GetFileName(roomsceneNames[index]);
                 }
-                string insertRoomSql = $"UPDATE dbo.Details SET dbo.Details.Roomscene='{roomsceneName}' WHERE dbo.Details.Sample_ID = '{realId[0]}'";
+                string insertRoomSql = $"UPDATE dbo.Details SET dbo.Details.Roomscene='{roomsceneName}' WHERE (dbo.Details.Sample_ID = '{realId[0]}' AND Program='{realId[1]}')";
                 using (SqlConnection myCon = new(sqlDataSource))
                 {
                     myCon.Open();
@@ -165,10 +195,10 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
                 }
             }
 
-            string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Sample.Sample_Note, dbo.Labels.Division_Label_Name from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID where dbo.Details.Sample_ID='{realId[0]}'";
-            
+            string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Sample.Sample_Note, dbo.Labels.Division_Label_Name from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID where (dbo.Details.Sample_ID='{realId[0]}' and Program='{realId[1]}')";
+
             DataTable table = new();
-            
+
             SqlDataReader myReader;
             using (SqlConnection myCon = new(sqlDataSource))
             {
@@ -183,6 +213,6 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
             }
 
             return new JsonResult(table);
-        }        
+        }
     }
 }
