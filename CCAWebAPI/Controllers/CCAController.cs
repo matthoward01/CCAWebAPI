@@ -81,6 +81,7 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
 
             return new JsonResult("Updated Successfully");
         }
+
         [HttpPut("JobHS/Status")]
         public JsonResult PutStatus(Status stat)
         {
@@ -212,6 +213,28 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
                 }
             }
 
+            return new JsonResult(table);
+        }
+
+        [HttpGet("ProgramsHS")]
+        public JsonResult GetStatusHS()
+        {
+            string query = @"SELECT DISTINCT Program from dbo.Details";
+
+            DataTable table = new();
+            string sqlDataSource = _configuration.GetConnectionString("CCA");
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new(sqlDataSource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new(query, myCon))
+                {
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
             return new JsonResult(table);
         }
     }
