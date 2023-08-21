@@ -217,9 +217,11 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
         }
 
         [HttpGet("ProgramsHS")]
-        public JsonResult GetStatusHS()
+        public JsonResult GetPrograms()
         {
-            string query = @"SELECT DISTINCT Program from dbo.Details";
+            //string query = @"SELECT DISTINCT Program from dbo.Details";
+            string query = @"SELECT DISTINCT Sample_ID, Program, Status, Status_FL from dbo.Details ORDER BY Program ASC";
+
 
             DataTable table = new();
             string sqlDataSource = _configuration.GetConnectionString("CCA");
@@ -236,6 +238,37 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
                 }
             }
             return new JsonResult(table);
+        }
+
+        [HttpGet("StatusHS/{prog}")]
+        public JsonResult GetStatus(string prog)
+        {
+            string query = $"SELECT DISTINCT Count(*) as StatusCount from dbo.Details WHERE (Art_Type_FL LIKE '%fl%' AND Program='{prog}' AND Status_FL='Approved')";
+            DataTable table = GetDataTable(query);
+            query = $"SELECT DISTINCT Count(*) as StatusCount from dbo.Details WHERE (Art_Type_BL LIKE '%bl%' AND Program='{prog}' AND Status='Approved')";
+            table.Merge(GetDataTable(query));
+
+            return new JsonResult(table);
+        }
+
+        private DataTable GetDataTable(string query)
+        {
+            DataTable table = new();
+            string sqlDataSource = _configuration.GetConnectionString("CCA");
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new(sqlDataSource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new(query, myCon))
+                {
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+
+            return table;
         }
     }
 }

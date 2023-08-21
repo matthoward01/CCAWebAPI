@@ -214,7 +214,30 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
         }
 
         [HttpGet("ProgramsSS")]
-        public JsonResult GetStatusHS()
+        public JsonResult GetPrograms()
+        {
+            //string query = @"SELECT DISTINCT Program from dbo.Details";
+            string query = @"SELECT DISTINCT Sample_ID, Program, Status, Status_FL from dbo.Details ORDER BY Program ASC";
+
+            DataTable table = new();
+            string sqlDataSource = _configuration.GetConnectionString("CCASS");
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new(sqlDataSource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new(query, myCon))
+                {
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+            return new JsonResult(table);
+        }
+
+        [HttpGet("StatusSS/{id}")]
+        public JsonResult GetStatus()
         {
             string query = @"SELECT DISTINCT Program from dbo.Details";
 
