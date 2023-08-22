@@ -33,52 +33,18 @@ namespace CCAWebAPI.Controllers
         {
             _configuration = configuration;
         }
-
-        [HttpGet("TableSS")]
-        public JsonResult GetTable()
-        {
-            string query = @"SELECT DISTINCT dbo.Details.Supplier_Name, dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Details.Program, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL, dbo.Details.Output, dbo.Details.Output_FL 
-FROM dbo.Sample 
-INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
-
-            DataTable table = new();
-            string sqlDataSource = _configuration.GetConnectionString("CCASS");
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new(sqlDataSource))
-            {
-                myCon.Open();
-                using (SqlCommand myCommand = new(query, myCon))
-                {
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myCon.Close();
-                }
-            }
-            return new JsonResult(table);
-        }
+        
 
         [HttpPut("JobSS/Change")]
         public JsonResult PutChange(ChangesSS cng)
         {
             string query = $"UPDATE dbo.Details set Change = '{cng.Change}' where Sample_ID = '{cng.Sample_ID}'";
-            DataTable table = new DataTable();
-            string sqlDataSource = _configuration.GetConnectionString("CCASS");
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
-            {
-                myCon.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myCon))
-                {
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader); ;
-                    myReader.Close();
-                    myCon.Close();
-                }
-            }
+
+            SqlPut(query);
 
             return new JsonResult("Updated Successfully");
         }
+
         [HttpPut("JobSS/Status")]
         public JsonResult PutStatus(StatusSS stat)
         {
@@ -91,22 +57,21 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
             {
                 query = $"UPDATE dbo.Details set Status = '{stat.New_Status}' where Sample_ID = '{stat.Sample_ID}'";
             }
-            DataTable table = new DataTable();
-            string sqlDataSource = _configuration.GetConnectionString("CCASS");
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new SqlConnection(sqlDataSource))
-            {
-                myCon.Open();
-                using (SqlCommand myCommand = new SqlCommand(query, myCon))
-                {
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader); ;
-                    myReader.Close();
-                    myCon.Close();
-                }
-            }
+            SqlPut(query);
 
             return new JsonResult("Updated Successfully");
+        }
+
+        [HttpGet("TableSS")]
+        public JsonResult GetTable()
+        {
+            string query = @"SELECT DISTINCT dbo.Details.Supplier_Name, dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Details.Program, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL, dbo.Details.Output, dbo.Details.Output_FL 
+FROM dbo.Sample 
+INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
+
+            DataTable table = GetDataTable(query);
+
+            return new JsonResult(table);
         }
 
         [HttpGet("JobSS/{id}")]
@@ -195,20 +160,7 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
 
             string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Sample.Sample_Note, dbo.Sample.Split_Board, dbo.Labels.Division_Label_Name from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID where (dbo.Details.Sample_ID='{realId[0]}' and Program='{realId[1]}')";
 
-            DataTable table = new();
-
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new(sqlDataSource))
-            {
-                myCon.Open();
-                using (SqlCommand myCommand = new(query, myCon))
-                {
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myCon.Close();
-                }
-            }
+            DataTable table = GetDataTable(query);
 
             return new JsonResult(table);
         }
@@ -219,28 +171,12 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
             //string query = @"SELECT DISTINCT Program from dbo.Details";
             string query = @"SELECT DISTINCT Sample_ID, Program, Status, Status_FL from dbo.Details ORDER BY Program ASC";
 
-            DataTable table = new();
-            string sqlDataSource = _configuration.GetConnectionString("CCASS");
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new(sqlDataSource))
-            {
-                myCon.Open();
-                using (SqlCommand myCommand = new(query, myCon))
-                {
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myCon.Close();
-                }
-            }
+            DataTable table = GetDataTable(query);
             return new JsonResult(table);
         }
 
-        [HttpGet("StatusSS/{id}")]
-        public JsonResult GetStatus()
+        private DataTable GetDataTable(string query)
         {
-            string query = @"SELECT DISTINCT Program from dbo.Details";
-
             DataTable table = new();
             string sqlDataSource = _configuration.GetConnectionString("CCASS");
             SqlDataReader myReader;
@@ -255,7 +191,24 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
                     myCon.Close();
                 }
             }
-            return new JsonResult(table);
+
+            return table;
+        }
+
+        private void SqlPut(string query)
+        {
+            string sqlDataSource = _configuration.GetConnectionString("CCASS");
+            SqlDataReader myReader;
+            using (SqlConnection myCon = new(sqlDataSource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new(query, myCon))
+                {
+                    myReader = myCommand.ExecuteReader();
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
         }
     }
 }
