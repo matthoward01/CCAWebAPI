@@ -18,12 +18,14 @@ namespace CCAWebAPI.Controllers
         public class ChangesSS
         {
             public string Sample_ID { get; set; }
+            public string Program { get; set; }
             public string Change { get; set; }
         }
         public class StatusSS
         {
             public string Status_Type { get; set; }
             public string Sample_ID { get; set; }
+            public string Program { get; set; }
             public string New_Status { get; set; }
         }
 
@@ -42,22 +44,31 @@ namespace CCAWebAPI.Controllers
 
             SqlPut(query);
 
+            string historySql = $"INSERT INTO dbo.History(Sample_ID, Program, Text, Type) VALUES('{cng.Sample_ID}', '{cng.Program}', '{cng.Change}', 'Automatic')";
+            SqlPut(historySql);
+
+
             return new JsonResult("Updated Successfully");
         }
 
         [HttpPut("JobSS/Status")]
         public JsonResult PutStatus(StatusSS stat)
         {
+            string type = "Manual";
             string query = "";
+            string historySql = "";
             if (stat.Status_Type.Equals("fl"))
             {
                 query = $"UPDATE dbo.Details set Status_FL = '{stat.New_Status}' where Sample_ID = '{stat.Sample_ID}'";
+                historySql = $"INSERT INTO dbo.History (Sample_ID, Program, Text, Type) VALUES('{stat.Sample_ID}', '{stat.Program}', 'FL: {stat.New_Status}', '{type}')";
             }
             if (stat.Status_Type.Equals("bl"))
             {
                 query = $"UPDATE dbo.Details set Status = '{stat.New_Status}' where Sample_ID = '{stat.Sample_ID}'";
+                historySql = $"INSERT INTO dbo.History (Sample_ID, Program, Text, Type) VALUES('{stat.Sample_ID}', '{stat.Program}', 'BL: {stat.New_Status}', '{type}')";
             }
             SqlPut(query);
+            SqlPut(historySql);
 
             return new JsonResult("Updated Successfully");
         }
@@ -88,12 +99,12 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
 
             if (doRoomsceneStuff)
             {
-
-                string sql1 = $"SELECT DISTINCT Supplier_Product_Name FROM dbo.Details WHERE (Sample_ID='{realId[0]}' AND Program='{realId[1]}')";
+                //TODO: Redo to use DataTable
+                string sqlSuppliers = $"SELECT DISTINCT Supplier_Product_Name FROM dbo.Details WHERE (Sample_ID='{realId[0]}' AND Program='{realId[1]}')";
                 using (SqlConnection myCon = new(sqlDataSource))
                 {
                     myCon.Open();
-                    command = new SqlCommand(sql1, myCon);
+                    command = new SqlCommand(sqlSuppliers, myCon);
                     dataReader = command.ExecuteReader();
                     while (dataReader.Read())
                     {
@@ -110,15 +121,16 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
                 {
                     if (count.Equals(0))
                     {
-                        sql = sql + $"(Supplier_Product_Name = '{style}'";
+                        sql += $"(Supplier_Product_Name = '{style}'";
                         count++;
                     }
                     else
                     {
-                        sql = sql + $" OR Supplier_Product_Name = '{style}'";
+                        sql += $" OR Supplier_Product_Name = '{style}'";
                     }
                 } 
-                sql = sql + $") and Manufacturer_Feeler='yes' AND Program='{realId[1]}')";
+                sql += $") and Manufacturer_Feeler='yes' AND Program='{realId[1]}')";
+                //TODO: Redo to use DataTable
                 using (SqlConnection myCon = new(sqlDataSource))
                 {
                     myCon.Open();
@@ -146,19 +158,25 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
                 {
                     roomsceneName = Path.GetFileName(roomsceneNames[index]);
                 }
-                string insertRoomSql = $"UPDATE dbo.Details SET dbo.Details.Roomscene='{roomsceneName}' WHERE (dbo.Details.Sample_ID = '{realId[0]}' AND Program='{realId[1]}')";
-                using (SqlConnection myCon = new(sqlDataSource))
-                {
-                    myCon.Open();
-                    command = new SqlCommand(insertRoomSql, myCon);
-                    dataReader = command.ExecuteReader();
-                    dataReader.Close();
-                    command.Dispose();
-                    myCon.Close();
-                }
+
+                string insertRoomSql = $"UPDATE dbo.Details SET dbo.Details.Roomscene='{roomsceneName}' WHERE (dbo.Details.Sample_ID = '{realId[0]}' AND dno.Details.Program='{realId[1]}')";
+                
+                SqlPut(insertRoomSql);
             }
 
-            string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Sample.Sample_Note, dbo.Sample.Split_Board, dbo.Labels.Division_Label_Name from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID where (dbo.Details.Sample_ID='{realId[0]}' and Program='{realId[1]}')";
+            string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Sample.Sample_Note, dbo.Sample.Split_Board, dbo.Labels.Division_Label_Name from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID where (dbo.Details.Sample_ID='{realId[0]}' and dbo.Details.Program='{realId[1]}')";
+
+            DataTable table = GetDataTable(query);
+
+            return new JsonResult(table);
+        }
+
+        [HttpGet("HistorySS/{id}")]
+        public JsonResult GetHistory(string id)
+        {
+            string[] realId = id.Split(',');
+
+            string query = $"SELECT FORMAT (DateTime, 'yyyy-MM-dd HH:mm:ss') as DateTime, Text, Type FROM dbo.History WHERE (Sample_ID='{realId[0]}' and Program='{realId[1]}') ORDER BY DateTime ASC";
 
             DataTable table = GetDataTable(query);
 
@@ -172,6 +190,7 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
             string query = @"SELECT DISTINCT Sample_ID, Program, Status, Status_FL from dbo.Details ORDER BY Program ASC";
 
             DataTable table = GetDataTable(query);
+
             return new JsonResult(table);
         }
 

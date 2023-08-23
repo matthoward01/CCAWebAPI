@@ -25,6 +25,7 @@ namespace CCAWebAPI
             ISheet sheetDetails = wb.GetSheet("Details");
             ISheet sheetSample = wb.GetSheet("Sample");
             ISheet sheetLabels = wb.GetSheet("Labels");            
+            ISheet sheetWarranties = wb.GetSheet("Warranties");            
 
             //ISheet sheetDetails = wb.GetSheetAt(0);
             //ISheet sheetSample = wb.GetSheetAt(1);
@@ -34,10 +35,12 @@ namespace CCAWebAPI
             List<string> detailsHeaderList = new(GetHeaderColumns(sheetDetails));
             List<string> sampleHeaderList = new(GetHeaderColumns(sheetSample));
             List<string> labelsHeaderList = new(GetHeaderColumns(sheetLabels));
-            //List<string> warrantiesHeaderList = new(GetHeaderColumns(sheetWarranties));
+            List<string> warrantiesHeaderList = new(GetHeaderColumns(sheetWarranties));
+
             int countDetails = GetRowCount(sheetDetails);
             int countSample = GetRowCount(sheetSample);
             int countLabels = GetRowCount(sheetLabels);
+            int countWarranties = GetRowCount(sheetWarranties);
             Console.WriteLine("-------------------------------------------");
             var timer = new Stopwatch();
             for (int i = 1; i < countDetails; i++)
@@ -66,7 +69,7 @@ namespace CCAWebAPI
                 decimal progress = (i / (decimal)countSample) * 100;
                 timer.Stop();
                 TimeSpan ts = timer.Elapsed;
-                double timeLeft = (ts.TotalSeconds * countDetails) - (ts.TotalSeconds * i);
+                double timeLeft = (ts.TotalSeconds * countSample) - (ts.TotalSeconds * i);
                 string value = "s";
                 if (timeLeft > 60)
                 {
@@ -85,7 +88,7 @@ namespace CCAWebAPI
                 decimal progress = (i / (decimal)countLabels) * 100;
                 timer.Stop();
                 TimeSpan ts = timer.Elapsed;
-                double timeLeft = (ts.TotalSeconds * countDetails) - (ts.TotalSeconds * i);
+                double timeLeft = (ts.TotalSeconds * countLabels) - (ts.TotalSeconds * i);
                 string value = "s";
                 if (timeLeft > 60)
                 {
@@ -97,10 +100,23 @@ namespace CCAWebAPI
             }
             Console.Write("\rReading Labels Sheet 100% | 0.000s\n");
             Console.WriteLine("-------------------------------------------");
-            /*for (int i = 1; i < GetRowCount(sheetWarranties); i++)
+            for (int i = 1; i < countWarranties; i++)
             {
+                timer.Start();
                 larXlsSheet.WarrantiesList.Add(GetWarranties(sheetWarranties, warrantiesHeaderList, i));
-            }*/
+                decimal progress = (i / (decimal)countWarranties) * 100;
+                timer.Stop();
+                TimeSpan ts = timer.Elapsed;
+                double timeLeft = (ts.TotalSeconds * countWarranties) - (ts.TotalSeconds * i);
+                string value = "s";
+                if (timeLeft > 60)
+                {
+                    timeLeft = timeLeft / 60;
+                    value = "m";
+                }
+                Console.Write("\rReading Warranties Sheet {0}% | {1:0.000}{2}", (int)Math.Round(progress), timeLeft, value);
+                timer = new();
+            }
 
             return larXlsSheet;
         }        

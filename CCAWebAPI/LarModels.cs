@@ -155,6 +155,7 @@ namespace CCAWebAPI
             public string Trade_Up { get; set; } = "";
             public string Wood_Imaging { get; set; } = "";
             public string Sample_Note { get; set; } = "";
+            public string Program { get; set; } = "";
         }
         public class Labels
         {
@@ -163,6 +164,7 @@ namespace CCAWebAPI
             public string Division_Label_Type { get; set; } = "";
             public string Division_Label_Name { get; set; } = "";
             public string Priority { get; set; } = "";
+            public string Program { get; set; } = "";
         }
         public class Warranties
         {
@@ -171,6 +173,7 @@ namespace CCAWebAPI
             public string Provider { get; set; } = "";
             public string Duration { get; set; } = "";
             public string Warranty_Period { get; set; } = "";
+            public string Program { get; set; } = "";
             public string Product_Warranty_Type_Code { get; set; } = "";
         }
         public class LARXlsSheet
