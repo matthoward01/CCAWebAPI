@@ -47,7 +47,7 @@ namespace CCAWebAPI.Controllers
         [HttpPut("JobHS/Change")]
         public JsonResult PutChange(Changes cng)
         {
-            string query = $"UPDATE dbo.Details set Change = '{cng.Change}' where Sample_ID = '{cng.Sample_ID}'";
+            string query = $"UPDATE dbo.Details set Change = '{cng.Change}' where (Sample_ID = '{cng.Sample_ID}' AND Program = '{cng.Program}')";
 
             SqlPut(query);
 
@@ -66,12 +66,12 @@ namespace CCAWebAPI.Controllers
             string historySql = "";
             if (stat.Status_Type.Equals("fl"))
             {
-                query = $"UPDATE dbo.Details set Status_FL = '{stat.New_Status}' where Sample_ID = '{stat.Sample_ID}'";
+                query = $"UPDATE dbo.Details set Status_FL = '{stat.New_Status}' where (Sample_ID = '{stat.Sample_ID}' AND Program = '{stat.Program}')";
                 historySql = $"INSERT INTO dbo.History (Sample_ID, Program, Text, Type) VALUES('{stat.Sample_ID}', '{stat.Program}', 'FL: {stat.New_Status}', '{type}')";
             }
             if (stat.Status_Type.Equals("bl"))
             {
-                query = $"UPDATE dbo.Details set Status = '{stat.New_Status}' where Sample_ID = '{stat.Sample_ID}'";
+                query = $"UPDATE dbo.Details set Status = '{stat.New_Status}' where (Sample_ID = '{stat.Sample_ID}' AND Program = '{stat.Program}')";
                 historySql = $"INSERT INTO dbo.History (Sample_ID, Program, Text, Type) VALUES('{stat.Sample_ID}', '{stat.Program}', 'BL: {stat.New_Status}', '{type}')";
             }
             SqlPut(query);
@@ -100,17 +100,21 @@ namespace CCAWebAPI.Controllers
                 mktSpreadsheetItemList.Add(mktSpreadsheetItem);
             }
             string updateText = "Updating with new LAR Data";
+            foreach (LarModels.Sample s in lARXlsSheet.SampleList)
+            {
+                string deleteSql = $"DELETE FROM dbo.Details WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                SqlPut(deleteSql);
+                deleteSql = $"DELETE FROM dbo.Sample WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                SqlPut(deleteSql);
+                deleteSql = $"DELETE FROM dbo.Labels WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                SqlPut(deleteSql);
+                //deleteSql = $"DELETE FROM dbo.Warranties WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                deleteSql = $"DELETE FROM dbo.Warranties WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                SqlPut(deleteSql);
+            }
+
             foreach (LarModels.Details d in lARXlsSheet.DetailsList)
             {
-                string deleteSql = $"DELETE FROM dbo.Details WHERE (Sample_ID='{d.Sample_ID}' AND Program='{upd.Program}')";
-                SqlPut(deleteSql);
-                deleteSql = $"DELETE FROM dbo.Sample WHERE (Sample_ID='{d.Sample_ID}' AND Program='{upd.Program}')";
-                SqlPut(deleteSql);
-                deleteSql = $"DELETE FROM dbo.Labels WHERE (Sample_ID='{d.Sample_ID}' AND Program='{upd.Program}')";
-                SqlPut(deleteSql);
-                deleteSql = $"DELETE FROM dbo.Warranties WHERE (Sample_ID='{d.Sample_ID}' AND Program='{upd.Program}')";
-                SqlPut(deleteSql);
-
                 string sql = "INSERT INTO dbo.Details (Sample_ID, Primary_Display, Division_List, Supplier_Name, " +
                         "Child_Supplier, Taxonomy, Supplier_Product_Name, Merchandised_Product_ID, " +
                         "Merch_Prod_Start_Date, Division_Product_Name, Web_Product_Name, Division_Collection, " +
@@ -228,9 +232,9 @@ namespace CCAWebAPI.Controllers
         [HttpGet("TableHS")]
         public JsonResult GetTable()
         {
-            string query = @"SELECT DISTINCT dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Details.Program, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL, dbo.Details.Output, dbo.Details.Output_FL 
+            string query = @"SELECT DISTINCT dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Details.Program, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL 
 FROM dbo.Sample 
-INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
+INNER JOIN dbo.Details ON (dbo.Details.Sample_ID=dbo.Sample.Sample_ID AND dbo.Details.Program=dbo.Sample.Program)";
 
             DataTable table = GetDataTable(query);
 
@@ -239,65 +243,44 @@ INNER JOIN dbo.Details ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID";
 
         [HttpGet("JobHS/{id}")]
         public JsonResult GetJob(string id)
-        {
-            
+        {            
             string roomscenePath = @"\\MAG1PVSF4\Resources\Approved Roomscenes\CCA Automation 2.0";
             string[] realId = id.Split(',');
             List<string> styleList = new();
-            string sqlDataSource = _configuration.GetConnectionString("CCA");
             List<string> mIds = new();
             bool doRoomsceneStuff = true;
-            SqlCommand command;
-            SqlDataReader dataReader;
 
             if (doRoomsceneStuff)
             {
-                //TODO: Redo to use DataTable
-                string sql1 = $"SELECT DISTINCT Supplier_Product_Name FROM dbo.Details WHERE (Sample_ID='{realId[0]}' AND Program='{realId[1]}')";
-                using (SqlConnection myCon = new(sqlDataSource))
+                string supplierSQL = $"SELECT DISTINCT Supplier_Product_Name FROM dbo.Details WHERE (Sample_ID='{realId[0]}' AND Program='{realId[1]}')";
+                DataTable supplierDT = GetDataTable(supplierSQL);
+                foreach (DataRow dr in supplierDT.Rows)
                 {
-                    myCon.Open();
-                    command = new SqlCommand(sql1, myCon);
-                    dataReader = command.ExecuteReader();
-                    while (dataReader.Read())
-                    {
-                        styleList.Add(dataReader.GetString(dataReader.GetOrdinal("Supplier_Product_Name")));
-                    }
-
-                    dataReader.Close();
-                    command.Dispose();
-                    myCon.Close();
+                    styleList.Add(dr["Supplier_Product_Name"].ToString());
                 }
+
                 int count = 0;
-                string sql = $"SELECT DISTINCT Merchandised_Product_Color_Id FROM dbo.Details WHERE (";
+                string mIdSql = $"SELECT DISTINCT Merchandised_Product_Color_Id FROM dbo.Details WHERE (";
                 foreach (string style in styleList)
                 {
                     if (count.Equals(0))
                     {
-                        sql += $"(Supplier_Product_Name = '{style}'";
+                        mIdSql += $"(Supplier_Product_Name = '{style}'";
                         count++;
                     }
                     else
                     {
-                        sql += $" OR Supplier_Product_Name = '{style}'";
+                        mIdSql += $" OR Supplier_Product_Name = '{style}'";
                     }
                 }
-                sql += $") AND Program='{realId[1]}')";
-                using (SqlConnection myCon = new(sqlDataSource))
-                {
-                    //TODO: Redo to use DataTable
-                    myCon.Open();
-                    command = new SqlCommand(sql, myCon);
-                    dataReader = command.ExecuteReader();
-                    while (dataReader.Read())
-                    {
-                        mIds.Add(dataReader.GetString(dataReader.GetOrdinal("Merchandised_Product_Color_Id")));
-                    }
+                mIdSql += $") AND Program='{realId[1]}')";
 
-                    dataReader.Close();
-                    command.Dispose();
-                    myCon.Close();
+                DataTable mIdDT = GetDataTable(mIdSql);
+                foreach (DataRow dr in mIdDT.Rows)
+                {
+                    mIds.Add(dr["Merchandised_Product_Color_Id"].ToString());
                 }
+
                 string roomsceneName = "";
                 List<string> roomsceneNames = Directory.GetFiles(roomscenePath, "*.tif", SearchOption.AllDirectories).ToList();
                 int index = -1;

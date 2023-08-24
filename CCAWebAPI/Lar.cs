@@ -132,9 +132,25 @@ namespace CCAWebAPI
         {
             Details details = new();
             details.Plate_ID_BL = GetCell(sheet, i, detailHeaderList.IndexOf("Back Label Plate #"));
+            if (details.Plate_ID_BL.Equals(""))
+            {
+                details.Plate_ID_BL = GetCell(sheet, i, detailHeaderList.IndexOf("Blanket Label Plate #"));
+            }
             details.Plate_ID_FL = GetCell(sheet, i, detailHeaderList.IndexOf("Face Label Plate #"));
+            if (details.Plate_ID_FL.Equals(""))
+            {
+                details.Plate_ID_FL = GetCell(sheet, i, detailHeaderList.IndexOf("Face Plate Plate #"));
+            }
             details.ArtType_BL = GetCell(sheet, i, detailHeaderList.IndexOf("Art Type - BL"));
+            if (details.ArtType_BL.Equals(""))
+            {
+                details.ArtType_BL = GetCell(sheet, i, detailHeaderList.IndexOf("Art_Type - BL"));
+            }
             details.ArtType_FL = GetCell(sheet, i, detailHeaderList.IndexOf("Art Type - FL"));
+            if (details.ArtType_FL.Equals(""))
+            {
+                details.ArtType_FL = GetCell(sheet, i, detailHeaderList.IndexOf("Art Type - FP"));
+            }
             details.Job_Number_BL = GetCell(sheet, i, detailHeaderList.IndexOf("Job Number - BL"));
             details.Job_Number_FL = GetCell(sheet, i, detailHeaderList.IndexOf("Job Number - FL"));
             details.ADDNumber = GetCell(sheet, i, detailHeaderList.IndexOf("ADDNumber"));
