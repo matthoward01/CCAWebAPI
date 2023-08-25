@@ -102,14 +102,14 @@ namespace CCAWebAPI.Controllers
             string updateText = "Updating with new LAR Data";
             foreach (LarModels.Sample s in lARXlsSheet.SampleList)
             {
-                string deleteSql = $"DELETE FROM dbo.Details WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                string deleteSql = $"DELETE FROM dbo.Details WHERE (Sample_ID='{s.Sample_ID}')";
                 SqlPut(deleteSql);
-                deleteSql = $"DELETE FROM dbo.Sample WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                deleteSql = $"DELETE FROM dbo.Sample WHERE (Sample_ID='{s.Sample_ID}')";
                 SqlPut(deleteSql);
-                deleteSql = $"DELETE FROM dbo.Labels WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                deleteSql = $"DELETE FROM dbo.Labels WHERE (Sample_ID='{s.Sample_ID}')";
                 SqlPut(deleteSql);
                 //deleteSql = $"DELETE FROM dbo.Warranties WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
-                deleteSql = $"DELETE FROM dbo.Warranties WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                deleteSql = $"DELETE FROM dbo.Warranties WHERE (Sample_ID='{s.Sample_ID}')";
                 SqlPut(deleteSql);
             }
 
@@ -195,27 +195,32 @@ namespace CCAWebAPI.Controllers
                            "Sampled_Color_SKU, Shared_Card, Sampled_With_Merch_Product_ID, Quick_Ship, Binder, " +
                            "Border, Character_Rating_by_Color, Feeler, MSRP, MSRP_Canada, " +
                            "Our_Price, Our_Price_Canada, RRP_US, Sampling_Color_Description, Split_Board, " +
-                           "Trade_Up, Wood_Imaging, Sample_Note, Program) " +
+                           "Trade_Up, Wood_Imaging, Sample_Note) " +
+                           //"Trade_Up, Wood_Imaging, Sample_Note, Program) " +
                            "VALUES('" + s.Sample_ID + "', '" + s.Sample_Name.Replace("'", "''") + "', '" + s.Sample_Size + "', '" + s.Sample_Type + "', " +
                            "'" + s.Sampled_Color_SKU.Replace("'", "''") + "', '" + s.Shared_Card + "', '" + s.Sampled_With_Merch_Product_ID + "', '" + s.Quick_Ship + "', '" + s.Binder + "', " +
                            "'" + s.Border + "', '" + s.Character_Rating_by_Color + "', '" + s.Feeler.Replace("'", "''") + "', '" + s.MSRP + "', '" + s.MSRP_Canada + "', " +
                            "'" + s.Our_Price + "', '" + s.Our_Price_Canada + "', '" + s.RRP_US + "', '" + s.Sampling_Color_Description + "', '" + s.Split_Board.Replace("'", "''") + "', " +
-                           "'" + s.Trade_Up + "', '" + s.Wood_Imaging + "', '" + s.Sample_Note + "', '" + upd.Program + "')"; 
+                           "'" + s.Trade_Up + "', '" + s.Wood_Imaging + "', '" + s.Sample_Note + "')"; 
+                           //"'" + s.Trade_Up + "', '" + s.Wood_Imaging + "', '" + s.Sample_Note + "', '" + upd.Program + "')"; 
                 SqlPut(sql);
             }
 
             foreach (LarModels.Labels l in lARXlsSheet.LabelList)
             {
-                string sql = "INSERT INTO dbo.Labels (Merchandised_Product_ID, Sample_ID, Division_Label_Type, Division_Label_Name, Program) VALUES ('" + l.Merchandised_Product_ID + "', '" + l.Sample_ID + "', '" + l.Division_Label_Type + "', '" + l.Division_Label_Name + "', '" + upd.Program + "')";
+                string sql = "INSERT INTO dbo.Labels (Merchandised_Product_ID, Sample_ID, Division_Label_Type, Division_Label_Name) VALUES ('" + l.Merchandised_Product_ID + "', '" + l.Sample_ID + "', '" + l.Division_Label_Type + "', '" + l.Division_Label_Name + "')";
+                //string sql = "INSERT INTO dbo.Labels (Merchandised_Product_ID, Sample_ID, Division_Label_Type, Division_Label_Name, Program) VALUES ('" + l.Merchandised_Product_ID + "', '" + l.Sample_ID + "', '" + l.Division_Label_Type + "', '" + l.Division_Label_Name + "', '" + upd.Program + "')";
                 SqlPut(sql);
             }
 
             foreach (LarModels.Warranties w in lARXlsSheet.WarrantiesList)
             {
                 string sql = "INSERT INTO dbo.Warranties " +
-                        "(Merchandised_Product_ID,Sample_ID,Provider,Duration,Warranty_Period,Product_Warranty_Type_Code, Program) " +
+                        "(Merchandised_Product_ID,Sample_ID,Provider,Duration,Warranty_Period,Product_Warranty_Type_Code) " +
+                        //"(Merchandised_Product_ID,Sample_ID,Provider,Duration,Warranty_Period,Product_Warranty_Type_Code, Program) " +
                         "VALUES ('" + w.Merchandised_Product_ID + "', '" + w.Sample_ID + "', '" + w.Provider + "', " +
-                        "'" + w.Duration + "', '" + w.Warranty_Period + "', '" + w.Product_Warranty_Type_Code + "', '" + upd.Program + "'); ";
+                        "'" + w.Duration + "', '" + w.Warranty_Period + "', '" + w.Product_Warranty_Type_Code + "'); ";
+                        //"'" + w.Duration + "', '" + w.Warranty_Period + "', '" + w.Product_Warranty_Type_Code + "', '" + upd.Program + "'); ";
 
                 SqlPut(sql);
             }
@@ -232,9 +237,11 @@ namespace CCAWebAPI.Controllers
         [HttpGet("TableHS")]
         public JsonResult GetTable()
         {
-            string query = @"SELECT DISTINCT dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Details.Program, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL 
+            //string query = @"SELECT DISTINCT dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Details.Program, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL 
+            string query = @"SELECT DISTINCT dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Details.Program, dbo.Details.Merchandised_Product_ID
 FROM dbo.Sample 
-INNER JOIN dbo.Details ON (dbo.Details.Sample_ID=dbo.Sample.Sample_ID AND dbo.Details.Program=dbo.Sample.Program)";
+INNER JOIN dbo.Details ON (dbo.Details.Sample_ID=dbo.Sample.Sample_ID)";
+//INNER JOIN dbo.Details ON (dbo.Details.Sample_ID=dbo.Sample.Sample_ID AND dbo.Details.Program=dbo.Sample.Program)";
 
             DataTable table = GetDataTable(query);
 
@@ -300,7 +307,7 @@ INNER JOIN dbo.Details ON (dbo.Details.Sample_ID=dbo.Sample.Sample_ID AND dbo.De
                 SqlPut(insertRoomSql);
             }
 
-            string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Sample.Sample_Note, dbo.Labels.Division_Label_Name from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID where (dbo.Details.Sample_ID='{realId[0]}' and dbo.Details.Program='{realId[1]}')";
+            string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Sample.Sample_Note, dbo.Labels.Division_Label_Name from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID where (dbo.Details.Sample_ID='{realId[0]}' and dbo.Details.Program='{realId[1]}' and dbo.Labels.Merchandised_Product_ID='{realId[2]}')";
 
             DataTable table = GetDataTable(query);
 

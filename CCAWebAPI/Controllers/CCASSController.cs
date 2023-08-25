@@ -101,13 +101,14 @@ namespace CCAWebAPI.Controllers
 
             foreach (LarModels.Sample s in lARXlsSheet.SampleList)
             {
-                string deleteSql = $"DELETE FROM dbo.Details WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                string deleteSql = $"DELETE FROM dbo.Details WHERE (Sample_ID='{s.Sample_ID}')";
                 SqlPut(deleteSql);
-                deleteSql = $"DELETE FROM dbo.Sample WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                deleteSql = $"DELETE FROM dbo.Sample WHERE (Sample_ID='{s.Sample_ID}')";
                 SqlPut(deleteSql);
-                deleteSql = $"DELETE FROM dbo.Labels WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                deleteSql = $"DELETE FROM dbo.Labels WHERE (Sample_ID='{s.Sample_ID}')";
                 SqlPut(deleteSql);
-                deleteSql = $"DELETE FROM dbo.Warranties WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
+                deleteSql = $"DELETE FROM dbo.Warranties WHERE (Sample_ID='{s.Sample_ID}')";
+                //deleteSql = $"DELETE FROM dbo.Warranties WHERE (Sample_ID='{s.Sample_ID}' AND Program='{upd.Program}')";
                 SqlPut(deleteSql);
             }
             foreach (LarModels.Details d in lARXlsSheet.DetailsList)
