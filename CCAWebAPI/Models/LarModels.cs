@@ -8,7 +8,7 @@ namespace CCAWebAPI
     {
         public class Details
         {
-            public string Status { get; set; } = "";
+            public string Status { get; set; } = "Not Done";
             public string Change { get; set; } = "";
             public string Plate_ID_BL { get; set; } = "";
             public string Plate_ID_FL { get; set; } = "";
@@ -126,7 +126,7 @@ namespace CCAWebAPI
             public string Program { get; set; } = "";
             public string Output { get; set; } = "0";
             public string Layout { get; set; } = "";
-            public string Status_FL { get; set; } = "";
+            public string Status_FL { get; set; } = "Not Done";
             public string Change_FL { get; set; } = "";
             public string Output_FL { get; set; } = "0";
         }

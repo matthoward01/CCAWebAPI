@@ -15,41 +15,22 @@ namespace CCAWebAPI.Controllers
     [Route("[controller]")]
     public class CCAContollerSS : ControllerBase
     {
-        public class ChangesSS
-        {
-            public string Sample_ID { get; set; }
-            public string Program { get; set; }
-            public string Change { get; set; }
-        }
-        public class StatusSS
-        {
-            public string Status_Type { get; set; }
-            public string Sample_ID { get; set; }
-            public string Program { get; set; }
-            public string New_Status { get; set; }
-        }
-        public class UpdateSS
-        {
-            public string Program { get; set; }
-            public string XlsFileName { get; set; }
-        }
 
         private readonly IConfiguration _configuration;
 
         public CCAContollerSS(IConfiguration configuration)
         {
             _configuration = configuration;
-        }
-        
+        }        
 
         [HttpPut("JobSS/Change")]
-        public JsonResult PutChange(ChangesSS cng)
+        public JsonResult PutChange(ControllerModels.Changes cng)
         {
             string query = $"UPDATE dbo.Details set Change = '{cng.Change}' where (Sample_ID = '{cng.Sample_ID}' AND Program = '{cng.Program}')";
 
             SqlPut(query);
 
-            string historySql = $"INSERT INTO dbo.History(Sample_ID, Program, Text, Type) VALUES('{cng.Sample_ID}', '{cng.Program}', '{cng.Change}', 'Automatic')";
+            string historySql = $"INSERT INTO dbo.History(Sample_ID, Program, Text, Submitter) VALUES('{cng.Sample_ID}', '{cng.Program}', '{cng.Change}', 'Webpage')";
             SqlPut(historySql);
 
 
@@ -57,20 +38,20 @@ namespace CCAWebAPI.Controllers
         }
 
         [HttpPut("JobSS/Status")]
-        public JsonResult PutStatus(StatusSS stat)
+        public JsonResult PutStatus(ControllerModels.Status stat)
         {
-            string type = "Manual";
+            string type = "Webpage";
             string query = "";
             string historySql = "";
             if (stat.Status_Type.Equals("fl"))
             {
                 query = $"UPDATE dbo.Details set Status_FL = '{stat.New_Status}' where (Sample_ID = '{stat.Sample_ID}' AND Program = '{stat.Program}')";
-                historySql = $"INSERT INTO dbo.History (Sample_ID, Program, Text, Type) VALUES('{stat.Sample_ID}', '{stat.Program}', 'FL: {stat.New_Status}', '{type}')";
+                historySql = $"INSERT INTO dbo.History (Sample_ID, Program, Text, Submitter) VALUES('{stat.Sample_ID}', '{stat.Program}', 'FL: {stat.New_Status}', '{type}')";
             }
             if (stat.Status_Type.Equals("bl"))
             {
                 query = $"UPDATE dbo.Details set Status = '{stat.New_Status}' where (Sample_ID = '{stat.Sample_ID}' AND Program = '{stat.Program}')";
-                historySql = $"INSERT INTO dbo.History (Sample_ID, Program, Text, Type) VALUES('{stat.Sample_ID}', '{stat.Program}', 'BL: {stat.New_Status}', '{type}')";
+                historySql = $"INSERT INTO dbo.History (Sample_ID, Program, Text, Submitter) VALUES('{stat.Sample_ID}', '{stat.Program}', 'BL: {stat.New_Status}', '{type}')";
             }
             SqlPut(query);
             SqlPut(historySql);
@@ -79,7 +60,7 @@ namespace CCAWebAPI.Controllers
         }
 
         [HttpPut("UpdateSS")]
-        public JsonResult PutUpdate(UpdateSS upd)
+        public JsonResult PutUpdate(ControllerModels.Update upd)
         {
             List<LarModels.MktSpreadsheetItem> mktSpreadsheetItemList = new();
             string fileName = upd.XlsFileName.Replace("\"", "");
@@ -171,30 +152,35 @@ namespace CCAWebAPI.Controllers
                             "Sampled_Color_SKU, Shared_Card, Multiple_Color_Lines, Sampled_With_Merch_Product_ID, Quick_Ship, Binder, " +
                             "Border, Character_Rating_by_Color, Feeler, MSRP, MSRP_Canada, " +
                             "Our_Price, Our_Price_Canada, RRP_US, Sampling_Color_Description, Split_Board, " +
-                            "Trade_Up, Wood_Imaging, Sample_Note, Program) " +
+                            "Trade_Up, Wood_Imaging, Sample_Note) " +
+                            //"Trade_Up, Wood_Imaging, Sample_Note, Program) " +
                             "VALUES('" + s.Sample_ID + "', '" + s.Sample_Name.Replace("'", "''") + "', '" + s.Sample_Size + "', '" + s.Sample_Type + "', " +
                             "'" + s.Sampled_Color_SKU.Replace("'", "''") + "', '" + s.Shared_Card + "', '" + s.Multiple_Color_Lines + "', '" + s.Sampled_With_Merch_Product_ID + "', '" + s.Quick_Ship + "', '" + s.Binder + "', " +
                             "'" + s.Border + "', '" + s.Character_Rating_by_Color + "', '" + s.Feeler.Replace("'", "''") + "', '" + s.MSRP + "', '" + s.MSRP_Canada + "', " +
                             "'" + s.Our_Price + "', '" + s.Our_Price_Canada + "', '" + s.RRP_US + "', '" + s.Sampling_Color_Description + "', '" + s.Split_Board.Replace("'", "''") + "', " +
-                            "'" + s.Trade_Up + "', '" + s.Wood_Imaging + "', '" + s.Sample_Note.Replace("'", "''") + "', '" + upd.Program + "')";
+                            "'" + s.Trade_Up + "', '" + s.Wood_Imaging + "', '" + s.Sample_Note.Replace("'", "''") + "')";
+                            //"'" + s.Trade_Up + "', '" + s.Wood_Imaging + "', '" + s.Sample_Note.Replace("'", "''") + "', '" + upd.Program + "')";
                 SqlPut(sql);
 
-                string historySql = $"INSERT INTO dbo.History(Sample_ID, Program, Text, Type) VALUES('{s.Sample_ID}', '{upd.Program}', '{updateText}', 'Automatic')";
+                string historySql = $"INSERT INTO dbo.History(Sample_ID, Program, Text, Submitter) VALUES('{s.Sample_ID}', '{upd.Program}', '{updateText}', 'Webpage')";
                 SqlPut(historySql);
             }
 
             foreach (LarModels.Labels l in lARXlsSheet.LabelList)
             {
-                string sql = "INSERT INTO dbo.Labels (Merchandised_Product_ID, Sample_ID, Division_Label_Type, Division_Label_Name, Program) VALUES ('" + l.Merchandised_Product_ID + "', '" + l.Sample_ID + "', '" + l.Division_Label_Type + "', '" + l.Division_Label_Name + "', '" + upd.Program + "')";
+                string sql = "INSERT INTO dbo.Labels (Merchandised_Product_ID, Sample_ID, Division_Label_Type, Division_Label_Name) VALUES ('" + l.Merchandised_Product_ID + "', '" + l.Sample_ID + "', '" + l.Division_Label_Type + "', '" + l.Division_Label_Name + "')";
+                //string sql = "INSERT INTO dbo.Labels (Merchandised_Product_ID, Sample_ID, Division_Label_Type, Division_Label_Name, Program) VALUES ('" + l.Merchandised_Product_ID + "', '" + l.Sample_ID + "', '" + l.Division_Label_Type + "', '" + l.Division_Label_Name + "', '" + upd.Program + "')";
                 SqlPut(sql);
             }
 
             foreach (LarModels.Warranties w in lARXlsSheet.WarrantiesList)
             {
                 string sql = "INSERT INTO dbo.Warranties " +
-                        "(Merchandised_Product_ID,Sample_ID,Provider,Duration,Warranty_Period,Product_Warranty_Type_Code, Program) " +
+                        "(Merchandised_Product_ID,Sample_ID,Provider,Duration,Warranty_Period,Product_Warranty_Type_Code) " +
+                        //"(Merchandised_Product_ID,Sample_ID,Provider,Duration,Warranty_Period,Product_Warranty_Type_Code, Program) " +
                         "VALUES ('" + w.Merchandised_Product_ID + "', '" + w.Sample_ID + "', '" + w.Provider + "', " +
-                        "'" + w.Duration + "', '" + w.Warranty_Period + "', '" + w.Product_Warranty_Type_Code + "', '" + upd.Program + "'); ";
+                        "'" + w.Duration + "', '" + w.Warranty_Period + "', '" + w.Product_Warranty_Type_Code + "'); ";
+                        //"'" + w.Duration + "', '" + w.Warranty_Period + "', '" + w.Product_Warranty_Type_Code + "', '" + upd.Program + "'); ";
 
                 SqlPut(sql);
             }
@@ -213,7 +199,8 @@ namespace CCAWebAPI.Controllers
         {
             string query = @"SELECT DISTINCT dbo.Details.Supplier_Name, dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Details.Program, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL 
 FROM dbo.Sample 
-INNER JOIN dbo.Details ON (dbo.Details.Sample_ID='dbo.Sample.Sample_ID' AND dbo.Details.Program='dbo.Sample.Program')";
+INNER JOIN dbo.Details ON (dbo.Details.Sample_ID=dbo.Sample.Sample_ID)";
+//INNER JOIN dbo.Details ON (dbo.Details.Sample_ID='dbo.Sample.Sample_ID' AND dbo.Details.Program='dbo.Sample.Program')";
 
             DataTable table = GetDataTable(query);
 
@@ -290,7 +277,7 @@ INNER JOIN dbo.Details ON (dbo.Details.Sample_ID='dbo.Sample.Sample_ID' AND dbo.
         {
             string[] realId = id.Split(',');
 
-            string query = $"SELECT FORMAT (DateTime, 'yyyy-MM-dd HH:mm:ss') as DateTime, Text, Type FROM dbo.History WHERE (Sample_ID='{realId[0]}' and Program='{realId[1]}') ORDER BY DateTime ASC";
+            string query = $"SELECT FORMAT (DateTime, 'yyyy-MM-dd HH:mm:ss') as DateTime, Text, Submitter FROM dbo.History WHERE (Sample_ID='{realId[0]}' and Program='{realId[1]}') ORDER BY DateTime ASC";
 
             DataTable table = GetDataTable(query);
 
