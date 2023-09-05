@@ -25,6 +25,5 @@ namespace CCAWebAPI.ControllerModels
         public string Program { get; set; }
         public string XlsFileName { get; set; }
         public bool isCanada { get; set; }
-    }
-    
+    }    
 }

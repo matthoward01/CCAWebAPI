@@ -18,14 +18,14 @@ namespace CCAWebAPI
         /// <returns>Returns a LAR Sheet for processing</returns>
         public static LARXlsSheet GetLar(string fileName)
         {
-            LARXlsSheet larXlsSheet = new();            
+            LARXlsSheet larXlsSheet = new();
 
             IWorkbook wb = new XSSFWorkbook(fileName);
 
             ISheet sheetDetails = wb.GetSheet("Details");
             ISheet sheetSample = wb.GetSheet("Sample");
-            ISheet sheetLabels = wb.GetSheet("Labels");            
-            ISheet sheetWarranties = wb.GetSheet("Warranties");            
+            ISheet sheetLabels = wb.GetSheet("Labels");
+            ISheet sheetWarranties = wb.GetSheet("Warranties");
 
             //ISheet sheetDetails = wb.GetSheetAt(0);
             //ISheet sheetSample = wb.GetSheetAt(1);
@@ -119,7 +119,7 @@ namespace CCAWebAPI
             }
 
             return larXlsSheet;
-        }        
+        }
 
         /// <summary>
         /// Get the details tab of the LAR Spreadsheet.

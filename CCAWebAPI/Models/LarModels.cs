@@ -8,8 +8,6 @@ namespace CCAWebAPI
     {
         public class Details
         {
-            public string Status { get; set; } = "Not Done";
-            public string Change { get; set; } = "";
             public string Plate_ID_BL { get; set; } = "";
             public string Plate_ID_FL { get; set; } = "";
             public string ArtType_BL { get; set; } = "";
@@ -124,10 +122,12 @@ namespace CCAWebAPI
             public string Roomscene { get; set; } = "";
             public string Color_Sequence { get; set; } = "";
             public string Program { get; set; } = "";
-            public string Output { get; set; } = "0";
             public string Layout { get; set; } = "";
+            public string Status { get; set; } = "Not Done";
             public string Status_FL { get; set; } = "Not Done";
+            public string Change { get; set; } = "";
             public string Change_FL { get; set; } = "";
+            public string Output { get; set; } = "0";
             public string Output_FL { get; set; } = "0";
         }
         public class Sample

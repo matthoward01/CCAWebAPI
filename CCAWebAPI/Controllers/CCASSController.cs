@@ -21,7 +21,7 @@ namespace CCAWebAPI.Controllers
         public CCAContollerSS(IConfiguration configuration)
         {
             _configuration = configuration;
-        }        
+        }
 
         [HttpPut("JobSS/Change")]
         public JsonResult PutChange(ControllerModels.Changes cng)
@@ -159,7 +159,7 @@ namespace CCAWebAPI.Controllers
                             "'" + s.Border + "', '" + s.Character_Rating_by_Color + "', '" + s.Feeler.Replace("'", "''") + "', '" + s.MSRP + "', '" + s.MSRP_Canada + "', " +
                             "'" + s.Our_Price + "', '" + s.Our_Price_Canada + "', '" + s.RRP_US + "', '" + s.Sampling_Color_Description + "', '" + s.Split_Board.Replace("'", "''") + "', " +
                             "'" + s.Trade_Up + "', '" + s.Wood_Imaging + "', '" + s.Sample_Note.Replace("'", "''") + "')";
-                            //"'" + s.Trade_Up + "', '" + s.Wood_Imaging + "', '" + s.Sample_Note.Replace("'", "''") + "', '" + upd.Program + "')";
+                //"'" + s.Trade_Up + "', '" + s.Wood_Imaging + "', '" + s.Sample_Note.Replace("'", "''") + "', '" + upd.Program + "')";
                 SqlPut(sql);
 
                 string historySql = $"INSERT INTO dbo.History(Sample_ID, Program, Text, Submitter) VALUES('{s.Sample_ID}', '{upd.Program}', '{updateText}', 'Webpage')";
@@ -180,7 +180,7 @@ namespace CCAWebAPI.Controllers
                         //"(Merchandised_Product_ID,Sample_ID,Provider,Duration,Warranty_Period,Product_Warranty_Type_Code, Program) " +
                         "VALUES ('" + w.Merchandised_Product_ID + "', '" + w.Sample_ID + "', '" + w.Provider + "', " +
                         "'" + w.Duration + "', '" + w.Warranty_Period + "', '" + w.Product_Warranty_Type_Code + "'); ";
-                        //"'" + w.Duration + "', '" + w.Warranty_Period + "', '" + w.Product_Warranty_Type_Code + "', '" + upd.Program + "'); ";
+                //"'" + w.Duration + "', '" + w.Warranty_Period + "', '" + w.Product_Warranty_Type_Code + "', '" + upd.Program + "'); ";
 
                 SqlPut(sql);
             }
@@ -197,28 +197,30 @@ namespace CCAWebAPI.Controllers
         [HttpGet("TableSS")]
         public JsonResult GetTable()
         {
-            string query = @"SELECT DISTINCT dbo.Details.Supplier_Name, dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Details.Program, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL 
-FROM dbo.Sample 
-INNER JOIN dbo.Details ON (dbo.Details.Sample_ID=dbo.Sample.Sample_ID)";
-//INNER JOIN dbo.Details ON (dbo.Details.Sample_ID='dbo.Sample.Sample_ID' AND dbo.Details.Program='dbo.Sample.Program')";
+            string query = @"SELECT DISTINCT dbo.Details.Supplier_Name, dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, 
+                            dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type_BL, 
+                            dbo.Details.Art_Type_FL, dbo.Details.Program, dbo.Sample.Sample_Name, dbo.Sample.Feeler, 
+                            dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL FROM dbo.Sample 
+                            INNER JOIN dbo.Details ON (dbo.Details.Sample_ID=dbo.Sample.Sample_ID)";
+            //INNER JOIN dbo.Details ON (dbo.Details.Sample_ID='dbo.Sample.Sample_ID' AND dbo.Details.Program='dbo.Sample.Program')";
 
             DataTable table = GetDataTable(query);
 
             return new JsonResult(table);
         }
 
-        [HttpGet("JobSS/{id}")]
-        public JsonResult GetJob(string id)
+        [HttpGet("JobSS/{program}/{id}/{mId}")]
+        public JsonResult GetJob(string program, string id, string mId)
         {
             string roomscenePath = @"\\MAG1PVSF4\Resources\Approved Roomscenes\CCA Automation 2.0";
-            string[] realId = id.Split(',');
             List<string> styleList = new();
             List<string> mIds = new();
             bool doRoomsceneStuff = true;
 
             if (doRoomsceneStuff)
             {
-                string supplierSQL = $"SELECT DISTINCT Supplier_Product_Name FROM dbo.Details WHERE (Sample_ID='{realId[0]}' AND Program='{realId[1]}')";
+                string supplierSQL = $"SELECT DISTINCT Supplier_Product_Name FROM dbo.Details " +
+                                        $"WHERE (Sample_ID='{id}' AND Program='{program}')";
                 DataTable supplierDT = GetDataTable(supplierSQL);
                 foreach (DataRow dr in supplierDT.Rows)
                 {
@@ -239,7 +241,7 @@ INNER JOIN dbo.Details ON (dbo.Details.Sample_ID=dbo.Sample.Sample_ID)";
                         mIdSql += $" OR Supplier_Product_Name = '{style}'";
                     }
                 }
-                mIdSql += $") AND Program='{realId[1]}')";
+                mIdSql += $") AND Program='{program}')";
 
                 DataTable mIdDT = GetDataTable(mIdSql);
                 foreach (DataRow dr in mIdDT.Rows)
@@ -260,24 +262,28 @@ INNER JOIN dbo.Details ON (dbo.Details.Sample_ID=dbo.Sample.Sample_ID)";
                     roomsceneName = Path.GetFileName(roomsceneNames[index]);
                 }
 
-                string insertRoomSql = $"UPDATE dbo.Details SET dbo.Details.Roomscene='{roomsceneName}' WHERE (dbo.Details.Sample_ID = '{realId[0]}' AND dbo.Details.Program='{realId[1]}')";
-                
+                string insertRoomSql = $"UPDATE dbo.Details SET dbo.Details.Roomscene='{roomsceneName}' " +
+                                        $"WHERE (dbo.Details.Sample_ID = '{id}' AND dbo.Details.Program='{program}')";
+
                 SqlPut(insertRoomSql);
             }
 
-            string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Sample.Sample_Note, dbo.Sample.Split_Board, dbo.Labels.Division_Label_Name from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID where (dbo.Details.Sample_ID='{realId[0]}' and dbo.Details.Program='{realId[1]}')";
+            string query = $"SELECT dbo.Details.*, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, " +
+                            $"dbo.Sample.Sample_Note, dbo.Sample.Split_Board, dbo.Labels.Division_Label_Name " +
+                            $"from dbo.Details inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID " +
+                            $"inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID " +
+                            $"where (dbo.Details.Sample_ID='{id}' and dbo.Details.Program='{program}')";
 
             DataTable table = GetDataTable(query);
 
             return new JsonResult(table);
         }
 
-        [HttpGet("HistorySS/{id}")]
-        public JsonResult GetHistory(string id)
+        [HttpGet("HistorySS/{program}/{id}/{mId}")]
+        public JsonResult GetHistory(string program, string id, string mId)
         {
-            string[] realId = id.Split(',');
-
-            string query = $"SELECT FORMAT (DateTime, 'yyyy-MM-dd HH:mm:ss') as DateTime, Text, Submitter FROM dbo.History WHERE (Sample_ID='{realId[0]}' and Program='{realId[1]}') ORDER BY DateTime ASC";
+            string query = $"SELECT FORMAT (DateTime, 'yyyy-MM-dd HH:mm:ss') as DateTime, Text, Submitter " +
+                            $"FROM dbo.History WHERE (Sample_ID='{id}' and Program='{program}') ORDER BY DateTime ASC";
 
             DataTable table = GetDataTable(query);
 
