@@ -294,7 +294,7 @@ namespace CCAWebAPI.Controllers
             //string query = @"SELECT DISTINCT dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, dbo.Details.Program, dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Sample.Shared_Card, dbo.Details.Change, dbo.Details.Change_FL 
             string query = @"SELECT DISTINCT dbo.Details.Face_Label_Plate, dbo.Details.Back_Label_Plate, dbo.Details.Sample_ID, 
                             dbo.Details.Status, dbo.Details.Status_FL, dbo.Details.Art_Type_BL, dbo.Details.Art_Type_FL, 
-                            dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Details.Program, dbo.Details.Merchandised_Product_ID 
+                            dbo.Sample.Sample_Name, dbo.Sample.Feeler, dbo.Details.Program, dbo.Details.Manufacturer_Product_Color_ID, dbo.Details.Merchandised_Product_ID 
                             FROM dbo.Sample INNER JOIN dbo.Details ON (dbo.Details.Sample_ID=dbo.Sample.Sample_ID)";
             //INNER JOIN dbo.Details ON (dbo.Details.Sample_ID=dbo.Sample.Sample_ID AND dbo.Details.Program=dbo.Sample.Program)";
 
@@ -303,8 +303,8 @@ namespace CCAWebAPI.Controllers
             return new JsonResult(table);
         }
 
-        [HttpGet("JobHS/{program}/{id}/{mId}")]
-        public JsonResult GetJob(string program, string id, string mId)
+        [HttpGet("JobHS/{program}/{id}/{merchId}/{manufId}")]
+        public JsonResult GetJob(string program, string id, string merchId, string manufId)
         {
             string roomscenePath = @"\\MAG1PVSF4\Resources\Approved Roomscenes\CCA Automation 2.0";
             List<string> styleList = new();
@@ -313,17 +313,18 @@ namespace CCAWebAPI.Controllers
 
             if (doRoomsceneStuff)
             {
-                string supplierSQL = $"SELECT DISTINCT Supplier_Product_Name FROM dbo.Details " +
+/*                string supplierSQL = $"SELECT DISTINCT Supplier_Product_Name FROM dbo.Details " +
                                         $"WHERE (Sample_ID='{id}' AND Program='{program}')";
                 DataTable supplierDT = GetDataTable(supplierSQL);
                 foreach (DataRow dr in supplierDT.Rows)
                 {
                     styleList.Add(dr["Supplier_Product_Name"].ToString());
-                }
+                }*/
 
                 int count = 0;
-                string mIdSql = $"SELECT DISTINCT Merchandised_Product_Color_Id FROM dbo.Details WHERE (";
-                foreach (string style in styleList)
+                string mIdSql = $"SELECT DISTINCT Merchandised_Product_Color_Id FROM dbo.Details WHERE (Manufacturer_Product_Color_ID='{manufId}' AND Program='{program}')";
+                //string mIdSql = $"SELECT DISTINCT Merchandised_Product_Color_Id FROM dbo.Details WHERE (";
+                /*foreach (string style in styleList)
                 {
                     if (count.Equals(0))
                     {
@@ -335,7 +336,7 @@ namespace CCAWebAPI.Controllers
                         mIdSql += $" OR Supplier_Product_Name = '{style}'";
                     }
                 }
-                mIdSql += $") AND Program='{program}')";
+                mIdSql += $") AND Program='{program}')";*/
 
                 DataTable mIdDT = GetDataTable(mIdSql);
                 foreach (DataRow dr in mIdDT.Rows)
@@ -344,7 +345,7 @@ namespace CCAWebAPI.Controllers
                 }
 
                 string roomsceneName = "";
-                List<string> roomsceneNames = Directory.GetFiles(roomscenePath, "*.tif", SearchOption.AllDirectories).ToList();
+                List<string> roomsceneNames = Directory.EnumerateFiles(roomscenePath, "*.*", SearchOption.AllDirectories).Where(f=> f.EndsWith(".tif") || f.EndsWith("tiff")).ToList();
                 int index = -1;
                 foreach (string s in mIds)
                 {
@@ -368,15 +369,15 @@ namespace CCAWebAPI.Controllers
                             $"inner join dbo.Sample ON dbo.Details.Sample_ID=dbo.Sample.Sample_ID " +
                             $"inner join dbo.Labels ON dbo.Details.Sample_ID=dbo.Labels.Sample_ID " +
                             $"where (dbo.Details.Sample_ID='{id}' and dbo.Details.Program='{program}' " +
-                            $"and dbo.Labels.Merchandised_Product_ID='{mId}')";
+                            $"and dbo.Labels.Merchandised_Product_ID='{merchId}')";
 
             DataTable table = GetDataTable(query);
 
             return new JsonResult(table);
         }
 
-        [HttpGet("HistoryHS/{program}/{id}/{mId}")]
-        public JsonResult GetHistory(string program, string id, string mId)
+        [HttpGet("HistoryHS/{program}/{id}/{merchId}/{manufId}")]
+        public JsonResult GetHistory(string program, string id, string merchId, string manufId)
         {
             string query = $"SELECT FORMAT (DateTime, 'yyyy-MM-dd HH:mm:ss') as DateTime, Text, Submitter " +
                             $"FROM dbo.History WHERE (Sample_ID='{id}' and Program='{program}') ORDER BY DateTime ASC";

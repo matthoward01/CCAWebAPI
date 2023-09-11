@@ -209,8 +209,8 @@ namespace CCAWebAPI.Controllers
             return new JsonResult(table);
         }
 
-        [HttpGet("JobSS/{program}/{id}/{mId}")]
-        public JsonResult GetJob(string program, string id, string mId)
+        [HttpGet("JobSS/{program}/{id}/{merchId}/{manufId}")]
+        public JsonResult GetJob(string program, string id, string merchId, string manufId)
         {
             string roomscenePath = @"\\MAG1PVSF4\Resources\Approved Roomscenes\CCA Automation 2.0";
             List<string> styleList = new();
@@ -249,7 +249,7 @@ namespace CCAWebAPI.Controllers
                     mIds.Add(dr["Merchandised_Product_Color_Id"].ToString());
                 }
                 string roomsceneName = "";
-                List<string> roomsceneNames = Directory.GetFiles(roomscenePath, "*.tif", SearchOption.AllDirectories).ToList();
+                List<string> roomsceneNames = Directory.EnumerateFiles(roomscenePath, "*.*", SearchOption.AllDirectories).Where(f=> f.EndsWith(".tif") || f.EndsWith(".tiff")).ToList();
                 int index = -1;
                 foreach (string s in mIds)
                 {
@@ -279,8 +279,8 @@ namespace CCAWebAPI.Controllers
             return new JsonResult(table);
         }
 
-        [HttpGet("HistorySS/{program}/{id}/{mId}")]
-        public JsonResult GetHistory(string program, string id, string mId)
+        [HttpGet("HistorySS/{program}/{id}/{merchId}/{manufId}")]
+        public JsonResult GetHistory(string program, string id, string merchId, string manufId)
         {
             string query = $"SELECT FORMAT (DateTime, 'yyyy-MM-dd HH:mm:ss') as DateTime, Text, Submitter " +
                             $"FROM dbo.History WHERE (Sample_ID='{id}' and Program='{program}') ORDER BY DateTime ASC";
