@@ -20,6 +20,7 @@ namespace CCAWebAPI
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
+                    webBuilder.UseUrls("http://*:4000");
                     webBuilder.UseStartup<Startup>();
                 });
     }
