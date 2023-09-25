@@ -75,10 +75,10 @@ namespace CCAWebAPI.Controllers
                 mktSpreadsheetItem.Change_FL = dr["Change_FL"].ToString();
                 mktSpreadsheetItem.Program = dr["Program"].ToString();
                 mktSpreadsheetItem.Sample_ID = dr["Sample_ID"].ToString();
-                if (upd.isCanada)
+                /*if (upd.isCanada)
                 {
                     mktSpreadsheetItem.Sample_ID += " CN";
-                }
+                }*/
                 mktSpreadsheetItem.Status = dr["Status"].ToString();
                 mktSpreadsheetItem.Status_FL = dr["Status_FL"].ToString();
                 mktSpreadsheetItemList.Add(mktSpreadsheetItem);
@@ -281,7 +281,13 @@ namespace CCAWebAPI.Controllers
 
             foreach (LarModels.MktSpreadsheetItem m in mktSpreadsheetItemList)
             {
-                string sql = $"UPDATE dbo.Details SET Change='{m.Change}', Change_FL='{m.Change_FL}', Status='{m.Status}', Status_FL='{m.Status_FL}' WHERE (Sample_ID='{m.Sample_ID}' AND Program='{m.Program}')";
+                string sql = "";
+                sql = $"UPDATE dbo.Details SET Change='{m.Change}', Change_FL='{m.Change_FL}', Status='{m.Status}', Status_FL='{m.Status_FL}' WHERE (Sample_ID='{m.Sample_ID}' AND Program='{m.Program}')";
+                
+                if (upd.isCanada)
+                {
+                    sql = $"UPDATE dbo.Details SET Change='{m.Change}', Change_FL='{m.Change_FL}', Status='{m.Status}', Status_FL='{m.Status_FL}' WHERE (Sample_ID='{m.Sample_ID}' AND Program='{m.Program}')";
+                }
                 SqlPut(sql);
             }
 
