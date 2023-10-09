@@ -407,18 +407,26 @@ namespace CCAWebAPI.Controllers
         private DataTable GetDataTable(string query)
         {
             DataTable table = new();
-            string sqlDataSource = _configuration.GetConnectionString("CCA");
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new(sqlDataSource))
-            {
-                myCon.Open();
-                using (SqlCommand myCommand = new(query, myCon))
+
+            try
+            {                
+                string sqlDataSource = _configuration.GetConnectionString("CCA");
+                SqlDataReader myReader;
+                using (SqlConnection myCon = new(sqlDataSource))
                 {
-                    myReader = myCommand.ExecuteReader();
-                    table.Load(myReader);
-                    myReader.Close();
-                    myCon.Close();
-                }
+                    myCon.Open();
+                    using (SqlCommand myCommand = new(query, myCon))
+                    {
+                        myReader = myCommand.ExecuteReader();
+                        table.Load(myReader);
+                        myReader.Close();
+                        myCon.Close();
+                    }
+                }                
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
             }
 
             return table;
@@ -426,18 +434,25 @@ namespace CCAWebAPI.Controllers
 
         private void SqlPut(string query)
         {
-            string sqlDataSource = _configuration.GetConnectionString("CCA");
-            SqlDataReader myReader;
-            using (SqlConnection myCon = new(sqlDataSource))
+            try
             {
-                myCon.Open();
-                using (SqlCommand myCommand = new(query, myCon))
+                string sqlDataSource = _configuration.GetConnectionString("CCA");
+                SqlDataReader myReader;
+                using (SqlConnection myCon = new(sqlDataSource))
                 {
-                    myReader = myCommand.ExecuteReader();
-                    myReader.Close();
-                    myCon.Close();
+                    myCon.Open();
+                    using (SqlCommand myCommand = new(query, myCon))
+                    {
+                        myReader = myCommand.ExecuteReader();
+                        myReader.Close();
+                        myCon.Close();
+                    }
                 }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }            
         }
     }
 }
