@@ -201,8 +201,8 @@ namespace CCAWebAPI.Controllers
                         "" + d.CcaSkuId.Replace("'", "''") + "', '" + d.Size_UC.Replace("'", "''") + "', '" +
                         "" + d.Roomscene.Replace("'", "''") + "', '" +
                         "" + d.Plate_ID_BL.Replace("'", "''") + "', '" + d.Plate_ID_FL.Replace("'", "''") + "', '" +
-                        "" + d.ArtType_BL.Replace("'", "''") + "', '" +
-                        "" + d.ArtType_FL.Replace("'", "''") + "', '" + "Not Done" + "', '" +
+                        "" + "HS18x24BL" + "', '" +
+                        "" + "HS4.5x2.1875FL" + "', '" + "Not Done" + "', '" +
                         "" + "Not Done" + "', '" + d.Change.Replace("'", "''") + "', '" +
                         "" + d.Change_FL.Replace("'", "''") + "', '" + upd.Program + "', '" +
                         "" + d.Output + "', '" + d.Output_FL + "', '" + d.Job_Number_BL + "', '" + d.Job_Number_FL + "')";
