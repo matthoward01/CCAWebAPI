@@ -65,9 +65,29 @@ namespace CCAWebAPI.Controllers
             List<LarModels.MktSpreadsheetItem> mktSpreadsheetItemList = new();
             string fileName = upd.XlsFileName.Replace("\"", "");
             LarModels.LARXlsSheet lARXlsSheet = Lar.GetLar(fileName);
-            string currentInfoQuery = "SELECT Change, Change_FL, Program, Sample_ID, Status, Status_FL FROM dbo.Details";
+            //string currentInfoQuery = "SELECT Change, Change_FL, Program, Sample_ID, Status, Status_FL FROM dbo.Details";
+            foreach (LarModels.Details d in lARXlsSheet.DetailsList)
+            {
+                string currentInfoQuery = $"SELECT Change, Change_FL, Program, Sample_ID, Status, Status_FL FROM dbo.Details WHERE Back_Label_Plate='{d.Plate_ID_BL}' OR Face_Label_Plate='{d.Plate_ID_FL}' OR Sample_ID='{d.Sample_ID}'";
+                DataTable currentInfo = GetDataTable(currentInfoQuery);
+                foreach (DataRow dr in currentInfo.Rows)
+                {
+                    LarModels.MktSpreadsheetItem mktSpreadsheetItem = new();
+                    mktSpreadsheetItem.Change = dr["Change"].ToString();
+                    mktSpreadsheetItem.Change_FL = dr["Change_FL"].ToString();
+                    mktSpreadsheetItem.Program = dr["Program"].ToString();
+                    mktSpreadsheetItem.Sample_ID = dr["Sample_ID"].ToString();
+                    /*if (upd.isCanada)
+                    {
+                        mktSpreadsheetItem.Sample_ID += " CN";
+                    }*/
+                    mktSpreadsheetItem.Status = dr["Status"].ToString();
+                    mktSpreadsheetItem.Status_FL = dr["Status_FL"].ToString();
+                    mktSpreadsheetItemList.Add(mktSpreadsheetItem);
+                }
+            }
 
-            DataTable currentInfo = GetDataTable(currentInfoQuery);
+            /*DataTable currentInfo = GetDataTable(currentInfoQuery);
             foreach (DataRow dr in currentInfo.Rows)
             {
                 LarModels.MktSpreadsheetItem mktSpreadsheetItem = new();
@@ -75,14 +95,14 @@ namespace CCAWebAPI.Controllers
                 mktSpreadsheetItem.Change_FL = dr["Change_FL"].ToString();
                 mktSpreadsheetItem.Program = dr["Program"].ToString();
                 mktSpreadsheetItem.Sample_ID = dr["Sample_ID"].ToString();
-                /*if (upd.isCanada)
+                *//*if (upd.isCanada)
                 {
                     mktSpreadsheetItem.Sample_ID += " CN";
-                }*/
+                }*//*
                 mktSpreadsheetItem.Status = dr["Status"].ToString();
                 mktSpreadsheetItem.Status_FL = dr["Status_FL"].ToString();
                 mktSpreadsheetItemList.Add(mktSpreadsheetItem);
-            }
+            }*/
             string updateText = "Updating with new LAR Data";
             foreach (LarModels.Sample s in lARXlsSheet.SampleList)
             {
