@@ -302,11 +302,11 @@ namespace CCAWebAPI.Controllers
             foreach (LarModels.MktSpreadsheetItem m in mktSpreadsheetItemList)
             {
                 string sql = "";
-                sql = $"UPDATE dbo.Details SET Change='{m.Change}', Change_FL='{m.Change_FL}', Status='{m.Status}', Status_FL='{m.Status_FL}' WHERE (Sample_ID='{m.Sample_ID}' AND Program='{m.Program}')";
+                sql = $"UPDATE dbo.Details SET Change='{m.Change}', Change_FL='{m.Change_FL}', Status='{m.Status}', Status_FL='{m.Status_FL}' WHERE (Sample_ID='{m.Sample_ID}')";
                 
                 if (upd.isCanada)
                 {
-                    sql = $"UPDATE dbo.Details SET Change='{m.Change}', Change_FL='{m.Change_FL}', Status='{m.Status}', Status_FL='{m.Status_FL}' WHERE (Sample_ID='{m.Sample_ID}' AND Program='{m.Program}')";
+                    sql = $"UPDATE dbo.Details SET Change='{m.Change}', Change_FL='{m.Change_FL}', Status='{m.Status}', Status_FL='{m.Status_FL}' WHERE (Sample_ID='{m.Sample_ID}')";
                 }
                 SqlPut(sql);
             }
